@@ -1,50 +1,37 @@
-Spring MVC Showcase
--------------------
-Demonstrates the capabilities of the Spring MVC web framework through small, simple examples.
-After reviewing this showcase, you should have a good understanding of what Spring MVC can do and get a feel for how easy it is to use.
-Includes project code along with a supporting slideshow and screen cast.
+## Thread count testing
 
-In this showcase you'll see the following in action:
+This application uses Spring MVC 4.0.7 and Bugsnag 3.1.4.
 
-* The simplest possible @Controller
-* Mapping Requests
-* Obtaining Request Data
-* Generating Responses
-* Message Converters
-* Rendering Views
-* Type Conversion
-* Validation
-* Forms
-* File Upload
-* Exception Handling
+This app is configured to:
 
-To get the code:
--------------------
-Clone the repository:
+- Notify a newly instantiated `Throwable` each time the `/simple` endpoint is accessed
+- Notify each time a `Throwable` is logged via a custom `LogbackAppender` 
 
-    $ git clone git://github.com/SpringSource/spring-mvc-showcase.git
 
-If this is your first time using Github, review http://help.github.com to learn the basics.
+## Setup
 
-To run the application:
--------------------	
-From the command line with Maven:
+### API Key
 
-    $ cd spring-mvc-showcase
-    $ mvn tomcat7:run [-Dmaven.tomcat.port=<port no.>] (In case 8080 is busy] 
+Alter the API key in `webapp/WEB-INF/spring/root-context.xml`
 
-or
+```
+<bean id="bugsnag" class="com.bugsnag.Bugsnag">
+	<constructor-arg value="api-key"/>
+</bean>
+```
 
-In your preferred IDE such as SpringSource Tool Suite (STS) or IDEA:
+Also alter the API key in `src/main/java/org.springframework.BugsnagAppender`
 
-* Import spring-mvc-showcase as a Maven Project
-* Drag-n-drop the project onto the "SpringSource tc Server Developer Edition" or another Servlet 2.5 or > Server to run, such as Tomcat.
+Alter the bugsnag endpoint to point at your Bugsnag instance if not running locally
 
-Access the deployed web application at: http://localhost:8080/spring-mvc-showcase/
+Run application with `mvn tomcat7:run -Dmaven.tomcat.port=1234`
 
-Note:
--------------------
+### Testing
 
-This showcase originated from a [blog post](http://blog.springsource.com/2010/07/22/spring-mvc-3-showcase/) and was adapted into a SpringOne presentation called [Mastering MVC 3](http://www.infoq.com/presentations/Mastering-Spring-MVC-3).
+Install [ApacheBench](https://httpd.apache.org/docs/2.4/programs/ab.html) and JProfiler
 
-A screen cast showing the showcase in action is [available in QuickTime format](http://s3.springsource.org/MVC/mvc-showcase-screencast.mov).
+Attach JProfiler to the application, then run: `ab -n 100000 -c 100 -s 5 http://localhost:1234/spring-mvc-showcase/simple`
+
+Compare the thread count when `bugsnag.notify(new RuntimeException())` is present in the `SimpleController`, and when it is commented out.
+
+Compare the thread count when `logger.warn("Error encountered", new RuntimeException("Hello World"))` is present in the `SimpleController`, and when it is commented out. 
